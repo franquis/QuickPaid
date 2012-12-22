@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html ng-app>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/pikaday.css">
+	<script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.1/angular.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/moment.min.js"></script>
+	<script type="text/javascript" src="js/pikaday.jquery.min.js"></script>
+	<script type="text/javascript" src="js/app2.js"></script>
+	<title>QuickPaid</title>
+	
+</head>
+<body>
+<div class="container-fluid" ng-controller="AppCtrl">
+	<div class="row-fluid">
+		<div class="span8">
+			
+			<ul class="thumbnails">
+				<li class="span2" ng-repeat="participant in participants" ng-controller="ParticipantCtrl">
+					<div class="thumbnail">
+						<img src="img/default-avatar.png" alt="">
+						<h5>{{participant.nom}}</h5>
+						<p>{{participant.description}}</p>
+						<p><a href="#" ng-click="edit($scope)"/>Edit</a></p>
+					</div>
+				</li>
+			</ul>
+			
+			
+		</div>
+	</div>
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html ng-app>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/pikaday.css">
+	<script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.1/angular.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/moment.min.js"></script>
+	<script type="text/javascript" src="js/pikaday.jquery.min.js"></script>
+	<script type="text/javascript" src="js/app.js"></script>
+	<title>QuickPaid</title>
+	<style>
+		.edit{
+			display:none;
+		}
+		
+		td.selected{
+			background-color:green;
+		}
+		.label, .badge {
+			min-width: 45px;
+		}
+		#mainTable > td{
+			text-align:center;
+		}
+	</style>
+</head>
+<body>
+<div class="container-fluid" ng-controller="TableCtrl">
+	<div class="page-header">
+		<h1>QuickPaid</h1>
+		<h5>R&eacute;partition des d&eacute;penses</h5>
+	</div>
+	<div class="row-fluid">
+		<div class="span4">
+			<a href="#addModal" rel="tooltip" data-toggle="modal" role="button" class="btn btn-primary" title="Ajouter une d&eacute;pense">
+				<i class="icon-white icon-plus"></i> Ajouter une d&eacute;pense
+			</a>
+			<a href="#" role="button" class="btn btn-success" title="Ajouter un participant" ng-click="toggleParticipants()">Participants</a>
+		</div>
+		<div class="span8">
+			<div id="participantsList" class="edit">
+				<ul class="thumbnails">
+					<li class="span2" ng-repeat="participant in participants">
+						<div class="thumbnail">
+							<img src="img/default-avatar.png" alt="">
+							<h5>{{participant.nom}}</h5>
+							<p>{{participant.description}}</p>
+						</div>
+					</li>
+				</ul>
+			</div>
+			
+		</div>
+	</div>
+	<div class="row-fluid">
+		<div class="span12">
+			<table class="table table-bordered table-striped" id="mainTable">
+				<thead>
+					<tr>
+						<th colspan="5" style="vertical-align:middle">D&eacute;penses</th>
+						<th colspan="{{participants.length}}">Participants</th>
+					</tr>
+					<tr>
+						<th>Quoi?</th>
+						<th>Qui?</th>
+						<th>Combien?</th>
+						<th>Quand?</th>
+						<th>Part.indiv</th>
+						<td ng-repeat="participant in participants"><span class="label">{{participant.nom}}</span></td>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="depense in depenses" id="depense_{{depense.id}}" >
+						<td>
+							<span class="view">
+								<span class="label">{{depense.description}}</span>
+							</span>
+							<span class="edit">
+								<input type="text" class="span8" ng-model="depense.description"/>
+							</span>
+						</td>
+						<td>
+							<span class="view">
+								<span class="label">{{getPayeur(depense).nom}}</span>
+							</span>
+							<span class="edit">
+								<select ng-model="depense.payeur" class="span12" ng-options="participant.nom for participant in participants" ng-selected="depense.payeur"/>
+							</span>
+						</td>
+						<td>
+							<span class="view">
+								<span class="label label-inverse">{{depense.montant}} &euro;</span>
+							</span>
+							<span class="edit">
+								<div class="input-append">
+									<input type="text" class="span4" ng-model="depense.montant"/>
+									<span class="add-on">&euro;</span>
+								</div>
+								
+							</span>
+						</td>
+						<td>
+							<span class="view">
+								<span class="label">{{depense.date}}</span>
+							</span>
+							<span class="edit">
+								<input type="text" class="span7 datepicker" ng-model="depense.date"/>
+							</span>
+						</td>
+						<td>
+							<span class="view">
+								<span class="label label-inverse">{{depense.montant / depense.participants.length | number:2}}  &euro;</span>
+							</span>
+						</td>
+						<td ng-repeat="participant in participants">
+							<input type="checkbox" ng-checked="isParticipant(depense,participant)" ng-click="update($event, depense, participant)"/>
+						</td>
+						<td>
+							<span class="view">
+								<a href="#" rel="tooltip" ng-click="edit(depense)" class="btn btn-warning btn-mini" title="Modifier"><i class="icon-white icon-edit"></i></a>
+								<a href="#" rel="tooltip" ng-click="remove(depense)" class="btn btn-danger btn-mini" title="Supprimer"><i class="icon-white icon-remove"></i></a>
+							</span>
+							<span class="edit">
+								<a href="#" rel="tooltip" class="btn btn-success btn-mini" ng-click="save(depense)"  title="Enregistrer"><i class="icon-white icon-ok-sign"></i></a>
+								<a href="#" rel="tooltip" class="btn btn-warning btn-mini" ng-click="cancel(depense)" title="Annuler"><i class="icon-white icon-remove"></i></a>
+							</span>
+						</td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr>
+						<th colspan="2">Total</th>
+						<th>
+							<span class="badge badge-info">{{sommedepense}}  &euro;</span>
+						</th>
+						<th colspan="2">Montant d&eacute;pens&eacute;</th>
+						<td ng-repeat="participant in participants">
+							<span class="badge badge-success">{{comptesDepense(participant) | number:2}}  &euro;</span>
+						</td>
+						<td></td>
+					</tr>
+					<tr>
+						<th colspan="3"></th>
+						<th colspan="2" class="align-left">Montant &agrave; rembourser</th>
+						<td ng-repeat="participant in participants">
+							<span class="badge badge-important">{{comptesRembourse(participant) | number:2}}  &euro;</span>
+						</td>
+						<td></td>
+					</tr>
+						<th colspan="3"></th>
+						<th colspan="2">Balance</th>
+						<td ng-repeat="participant in participants">
+							<span class="badge badge-inverse">{{comptesBalance(participant) | number:2}}  &euro;</span>
+						</td>
+						<td></td>
+					</tr>
+				</tfoot>
+			</table>
+			<caption><i class="icon icon-arrow-right"></i>{{depenses.length}} d&eacute;penses pour {{participants.length}} participants</caption>
+		</div>
+	</div>
+
+	<div class="row-fluid">
+		<h4>Remboursements:</h4>
+		<a href="#" ng-click="genereRemboursements()">Go</a>
+		<ul> <!-- ng-init="genereRemboursements()">-->
+			<li ng-repeat="remboursement in remboursements">
+				<span class="label">{{remboursement.debiteur}}</span> doit <span class="badge">{{remboursement.montant | number:2}} &euro;</span> &agrave; <span class="label">{{remboursement.receveur}}</span>
+			</li>
+		</ul>
+		<p><code>{{remboursements | json}}</code></p>
+	</div>
+</div>
+
+<div class="modal hide fade" id="addModal">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h3>Ajouter</h3>
+	</div>
+	<div class="modal-body">
+		<form class="form-horizontal">
+			<div class="control-group">
+				<label class="control-label" for="inputEmail">Email</label>
+				<div class="controls">
+					<input type="text" id="inputEmail" placeholder="Email">
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="inputPassword">Password</label>
+				<div class="controls">
+					<input type="password" id="inputPassword" placeholder="Password">
+				</div>
+			</div>
+			<div class="control-group">
+				<div class="controls">
+					<label class="checkbox">
+						<input type="checkbox"> Remember me
+					</label>
+					<button type="submit" class="btn">Sign in</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="modal-footer">
+		<a href="#" class="btn" role="button" data-dismiss="modal">Close</a>
+		<a href="#" class="btn btn-primary">Save changes</a>
+	</div>
+</div>
+
+
+</body>
+</html>
